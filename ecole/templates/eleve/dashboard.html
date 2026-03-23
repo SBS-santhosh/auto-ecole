@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon tableau de bord — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-speedometer2"></i> Tableau de bord</h2>
+    <p class="text-muted">Bienvenue, {{ user.get_full_name|default:user.username }} 👋</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card bg-gradient-primary p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ heures_effectuees }}h</div>
+                    <div class="stat-label mt-1">Heures effectuées</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-clock"></i></div>
+            </div>
+            <div class="progress mt-3" style="height: 6px; background: rgba(255,255,255,0.2);">
+                {% widthratio heures_effectuees objectif_heures 100 as pct %}
+                <div class="progress-bar" style="width: {{ pct }}%; background: white;"></div>
+            </div>
+            <small class="mt-1 d-block" style="color: rgba(255,255,255,0.7);">{{ heures_effectuees }}/{{ objectif_heures }}h objectif</small>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card bg-gradient-success p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ bookings.count }}</div>
+                    <div class="stat-label mt-1">Réservations actives</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-bookmark-check"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card bg-gradient-info p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ total_paye }}€</div>
+                    <div class="stat-label mt-1">Total payé</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-wallet2"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card bg-gradient-warning p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    {% widthratio heures_effectuees objectif_heures 100 as progress %}
+                    <div class="stat-value">{{ progress }}%</div>
+                    <div class="stat-label mt-1">Progression</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prochaines leçons -->
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event me-2 text-primary"></i>Prochaines leçons</h5>
+        <a href="{% url 'eleve_lecons' %}" class="btn btn-sm btn-outline-primary">Voir tout</a>
+    </div>
+    <div class="card-body p-0">
+        {% if prochaines_lecons %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Moniteur</th>
+                        <th>Véhicule</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in prochaines_lecons %}
+                    <tr>
+                        <td>{{ b.lecon.date_heure|date:"d/m/Y" }}</td>
+                        <td><span class="badge bg-primary-subtle text-primary">{{ b.lecon.date_heure|date:"H:i" }}</span></td>
+                        <td>{{ b.lecon.moniteur.get_full_name }}</td>
+                        <td>{{ b.lecon.vehicule|default:"—" }}</td>
+                        <td>{{ b.lecon.duree }} min</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4">
+            <i class="bi bi-calendar-x"></i>
+            <h5>Aucune leçon à venir</h5>
+            <p>Réservez une leçon pour commencer votre formation.</p>
+            <a href="{% url 'eleve_lecons' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-2"></i>Réserver une leçon</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

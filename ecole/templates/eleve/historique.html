@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Historique — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-clock-history"></i> Historique des leçons</h2>
+</div>
+
+{% if historique %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Moniteur</th>
+                        <th>Véhicule</th>
+                        <th>Durée</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in historique %}
+                    <tr>
+                        <td class="fw-semibold">{{ h.lecon.date_heure|date:"d/m/Y" }}</td>
+                        <td><span class="badge bg-success-subtle text-success">{{ h.lecon.date_heure|date:"H:i" }}</span></td>
+                        <td>{{ h.lecon.moniteur.get_full_name }}</td>
+                        <td>{{ h.lecon.vehicule|default:"—" }}</td>
+                        <td>{{ h.lecon.duree }} min</td>
+                        <td>
+                            {% if h.lecon.notes %}
+                            <span data-bs-toggle="tooltip" title="{{ h.lecon.notes }}">
+                                <i class="bi bi-chat-left-text text-primary"></i> Voir
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body empty-state">
+        <i class="bi bi-clock"></i>
+        <h5>Aucun historique</h5>
+        <p>Vos leçons effectuées apparaîtront ici.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

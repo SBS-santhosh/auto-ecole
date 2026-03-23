@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des leçons — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+    <h2><i class="bi bi-calendar3"></i> Gestion des leçons</h2>
+    <a href="{% url 'admin_lecon_creer' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Créer une leçon</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if lecons %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr><th>Date</th><th>Heure</th><th>Moniteur</th><th>Véhicule</th><th>Durée</th><th>Statut</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for l in lecons %}
+                    <tr>
+                        <td class="fw-semibold">{{ l.date_heure|date:"d/m/Y" }}</td>
+                        <td><span class="badge bg-primary-subtle text-primary">{{ l.date_heure|date:"H:i" }}</span></td>
+                        <td>{{ l.moniteur.get_full_name }}</td>
+                        <td>{{ l.vehicule|default:"—" }}</td>
+                        <td>{{ l.duree }} min</td>
+                        <td>
+                            {% if l.statut == 'disponible' %}<span class="badge bg-success">Disponible</span>
+                            {% elif l.statut == 'complete' %}<span class="badge bg-info">Réservée</span>
+                            {% elif l.statut == 'effectuee' %}<span class="badge bg-primary">Effectuée</span>
+                            {% else %}<span class="badge bg-danger">Annulée</span>{% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_lecon_modifier' l.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'admin_lecon_supprimer' l.id %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4">
+            <i class="bi bi-calendar-x"></i>
+            <h5>Aucune leçon</h5>
+            <a href="{% url 'admin_lecon_creer' %}" class="btn btn-primary mt-2">Créer une leçon</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

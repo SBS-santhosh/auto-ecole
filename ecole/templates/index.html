@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AutoÉcole Pro — Votre permis commence ici{% endblock %}
+
+{% block public_content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <span class="badge bg-primary-subtle text-primary mb-3 px-3 py-2" style="font-size: 0.85rem;">
+                    <i class="bi bi-star-fill me-1"></i> N°1 Auto-École en ligne
+                </span>
+                <h1>Votre permis<br>commence <span>ici</span></h1>
+                <p>Gérez vos leçons de conduite, suivez votre progression et préparez votre code de la route avec notre plateforme moderne et intuitive.</p>
+                <div class="d-flex gap-3 mt-4">
+                    <a href="{% url 'inscription' %}" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-rocket-takeoff me-2"></i>S'inscrire
+                    </a>
+                    <a href="{% url 'connexion' %}" class="btn btn-outline-light btn-lg px-4">
+                        Connexion
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 mt-5 mt-lg-0">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <i class="bi bi-calendar-check"></i>
+                            <h5>Réservation en ligne</h5>
+                            <p>Réservez vos leçons en quelques clics</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <i class="bi bi-graph-up"></i>
+                            <h5>Suivi progression</h5>
+                            <p>Suivez vos heures et votre avancement</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <i class="bi bi-question-circle"></i>
+                            <h5>Quiz Code</h5>
+                            <p>Entraînez-vous au code de la route</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <i class="bi bi-shield-check"></i>
+                            <h5>Espace sécurisé</h5>
+                            <p>Vos données en toute sécurité</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5" style="background: white;">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="display-4 fw-bold" style="color: var(--primary);">{{ nb_eleves }}+</div>
+                <p class="text-muted mt-2">Élèves inscrits</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="display-4 fw-bold" style="color: var(--success);">{{ nb_moniteurs }}+</div>
+                <p class="text-muted mt-2">Moniteurs qualifiés</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="display-4 fw-bold" style="color: var(--accent);">{{ nb_vehicules }}+</div>
+                <p class="text-muted mt-2">Véhicules disponibles</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-4" style="background: var(--dark); color: rgba(255,255,255,0.6);">
+    <div class="container text-center">
+        <p class="mb-0">© 2025 AutoÉcole Pro — Projet BTS SIO 2 · Django · Bootstrap 5</p>
+    </div>
+</footer>
+{% endblock %}

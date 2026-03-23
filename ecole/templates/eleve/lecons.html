@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Leçons disponibles — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h2><i class="bi bi-calendar-plus"></i> Leçons disponibles</h2>
+</div>
+
+{% if lecons %}
+<div class="row g-3">
+    {% for lecon in lecons %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="card-title mb-1 fw-bold">
+                            <i class="bi bi-calendar3 text-primary me-2"></i>{{ lecon.date_heure|date:"d/m/Y" }}
+                        </h5>
+                        <span class="badge bg-primary-subtle text-primary fs-6">{{ lecon.date_heure|date:"H:i" }}</span>
+                    </div>
+                    <span class="badge bg-success-subtle text-success">Disponible</span>
+                </div>
+                <ul class="list-unstyled mb-3">
+                    <li class="mb-2"><i class="bi bi-person-badge text-muted me-2"></i><strong>Moniteur :</strong> {{ lecon.moniteur.get_full_name }}</li>
+                    <li class="mb-2"><i class="bi bi-clock text-muted me-2"></i><strong>Durée :</strong> {{ lecon.duree }} minutes</li>
+                    {% if lecon.vehicule %}
+                    <li><i class="bi bi-car-front text-muted me-2"></i><strong>Véhicule :</strong> {{ lecon.vehicule }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="card-footer bg-transparent border-0 pb-3 px-3">
+                <a href="{% url 'eleve_reserver' lecon.id %}" class="btn btn-primary w-100">
+                    <i class="bi bi-check-circle me-2"></i>Réserver
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body empty-state">
+        <i class="bi bi-calendar-x"></i>
+        <h5>Aucune leçon disponible</h5>
+        <p>De nouvelles leçons seront bientôt proposées. Revenez plus tard !</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

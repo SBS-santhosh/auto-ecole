@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes élèves — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-people"></i> Mes élèves</h2>
+</div>
+
+{% if eleves %}
+<div class="row g-3">
+    {% for e in eleves %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-person-circle" style="font-size: 2.5rem; color: var(--primary);"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">{{ e.user.get_full_name }}</h5>
+                        <small class="text-muted">{{ e.user.email }}</small>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span><i class="bi bi-clock me-1"></i>Heures effectuées</span>
+                    <strong>{{ e.heures }}h / 20h</strong>
+                </div>
+                <div class="progress mb-3">
+                    <div class="progress-bar" style="width: {% widthratio e.heures 20 100 %}%;"></div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span><i class="bi bi-calendar3 me-1"></i>Leçons</span>
+                    <strong>{{ e.nb_lecons }}</strong>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'moniteur_dossier_eleve' e.user.id %}" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="bi bi-folder2-open me-1"></i>Voir le dossier
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body empty-state">
+        <i class="bi bi-people"></i>
+        <h5>Aucun élève</h5>
+        <p>Vous n'avez pas encore d'élèves inscrits à vos leçons.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

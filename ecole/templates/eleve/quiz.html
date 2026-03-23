@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Code de la Route — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-question-circle"></i> Quiz Code de la Route</h2>
+    <p class="text-muted">Testez vos connaissances — {{ questions|length }} question{{ questions|length|pluralize:"s" }}</p>
+</div>
+
+{% if questions %}
+<form method="post">
+    {% csrf_token %}
+    {% for q in questions %}
+    <div class="quiz-question">
+        <h5 class="mb-3">
+            <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+            {{ q.question }}
+        </h5>
+        <label class="quiz-option">
+            <input type="radio" name="question_{{ q.id }}" value="A" required>
+            <span><strong>A.</strong> {{ q.option_a }}</span>
+        </label>
+        <label class="quiz-option">
+            <input type="radio" name="question_{{ q.id }}" value="B">
+            <span><strong>B.</strong> {{ q.option_b }}</span>
+        </label>
+        <label class="quiz-option">
+            <input type="radio" name="question_{{ q.id }}" value="C">
+            <span><strong>C.</strong> {{ q.option_c }}</span>
+        </label>
+        {% if q.option_d %}
+        <label class="quiz-option">
+            <input type="radio" name="question_{{ q.id }}" value="D">
+            <span><strong>D.</strong> {{ q.option_d }}</span>
+        </label>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary btn-lg px-5">
+            <i class="bi bi-check2-all me-2"></i>Valider mes réponses
+        </button>
+    </div>
+</form>
+{% else %}
+<div class="card">
+    <div class="card-body empty-state">
+        <i class="bi bi-question-diamond"></i>
+        <h5>Aucune question disponible</h5>
+        <p>Les questions du quiz seront ajoutées prochainement.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

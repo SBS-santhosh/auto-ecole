@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des moniteurs — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+    <h2><i class="bi bi-person-badge"></i> Gestion des moniteurs</h2>
+    <a href="{% url 'admin_moniteur_creer' %}" class="btn btn-primary"><i class="bi bi-person-plus me-2"></i>Ajouter un moniteur</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if moniteurs %}
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>N° Permis</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for m in moniteurs %}
+                    <tr>
+                        <td class="fw-semibold">{{ m.get_full_name }}</td>
+                        <td>{{ m.email }}</td>
+                        <td>{{ m.profile.telephone|default:"—" }}</td>
+                        <td>{{ m.profile.numero_permis|default:"—" }}</td>
+                        <td>
+                            <a href="{% url 'admin_moniteur_modifier' m.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'admin_moniteur_supprimer' m.id %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-4">
+            <i class="bi bi-person-badge"></i>
+            <h5>Aucun moniteur</h5>
+            <a href="{% url 'admin_moniteur_creer' %}" class="btn btn-primary mt-2">Ajouter un moniteur</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

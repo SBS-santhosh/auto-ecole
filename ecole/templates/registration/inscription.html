@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Inscription — AutoÉcole Pro{% endblock %}
+
+{% block public_content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="text-center mb-4">
+            <i class="bi bi-car-front-fill" style="font-size: 2.5rem; color: var(--primary);"></i>
+            <h2 class="mt-2">Créer un compte</h2>
+            <p class="auth-subtitle">Rejoignez AutoÉcole Pro et commencez votre formation</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary w-100 py-2 mt-3">
+                <i class="bi bi-person-plus me-2"></i>S'inscrire
+            </button>
+        </form>
+        <p class="text-center mt-3 text-muted">
+            Déjà inscrit ? <a href="{% url 'connexion' %}">Se connecter</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Résultats Quiz — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-clipboard-check"></i> Résultats du Quiz</h2>
+</div>
+
+<div class="row justify-content-center mb-4">
+    <div class="col-md-6">
+        <div class="card text-center py-4 {% if pourcentage >= 70 %}border-success{% else %}border-danger{% endif %}" style="border-width: 2px;">
+            <div class="card-body">
+                <div class="display-1 fw-bold {% if pourcentage >= 70 %}text-success{% else %}text-danger{% endif %}">
+                    {{ pourcentage }}%
+                </div>
+                <h4 class="mt-2">{{ score }} / {{ total }} bonnes réponses</h4>
+                {% if pourcentage >= 70 %}
+                <span class="badge bg-success fs-6 mt-2"><i class="bi bi-trophy me-1"></i> Bravo, vous avez réussi !</span>
+                {% else %}
+                <span class="badge bg-danger fs-6 mt-2"><i class="bi bi-arrow-repeat me-1"></i> Continuez à vous entraîner</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="fw-bold mb-3">Détail des réponses</h4>
+{% for r in resultats %}
+<div class="card mb-3 {% if r.correct %}border-success{% else %}border-danger{% endif %}" style="border-left: 4px solid;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <h6 class="fw-bold">{{ r.question }}</h6>
+            {% if r.correct %}
+            <span class="badge bg-success"><i class="bi bi-check-lg"></i> Correct</span>
+            {% else %}
+            <span class="badge bg-danger"><i class="bi bi-x-lg"></i> Incorrect</span>
+            {% endif %}
+        </div>
+        <p class="mb-1">Votre réponse : <strong>{{ r.reponse_donnee }}</strong>
+        {% if not r.correct %} — Bonne réponse : <strong class="text-success">{{ r.reponse_correcte }}</strong>{% endif %}
+        </p>
+        {% if r.explication %}
+        <p class="text-muted mb-0"><i class="bi bi-lightbulb me-1"></i>{{ r.explication }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<div class="text-center mt-4">
+    <a href="{% url 'eleve_quiz' %}" class="btn btn-primary btn-lg"><i class="bi bi-arrow-repeat me-2"></i>Refaire le quiz</a>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon planning — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+    <h2><i class="bi bi-calendar-week"></i> Mon planning</h2>
+    <div class="d-flex gap-2">
+        <a href="?week={{ week_offset|add:'-1' }}" class="btn btn-outline-primary"><i class="bi bi-chevron-left"></i> Sem. préc.</a>
+        <a href="?week=0" class="btn btn-primary">Aujourd'hui</a>
+        <a href="?week={{ week_offset|add:'1' }}" class="btn btn-outline-primary">Sem. suiv. <i class="bi bi-chevron-right"></i></a>
+    </div>
+</div>
+
+<p class="text-muted mb-3">Semaine du {{ week_start|date:"d/m/Y" }} au {{ week_end|date:"d/m/Y" }}</p>
+
+{% for jour in jours %}
+<div class="planning-day">
+    <div class="planning-day-header {% if jour.date == today %}today{% endif %}">
+        <span>{{ jour.date|date:"l d F" }}</span>
+        <span class="badge bg-light text-dark">{{ jour.lecons|length }} leçon{{ jour.lecons|length|pluralize:"s" }}</span>
+    </div>
+    {% if jour.lecons %}
+        {% for l in jour.lecons %}
+        <div class="planning-lesson">
+            <div>
+                <span class="fw-bold text-primary me-2">{{ l.date_heure|date:"H:i" }}</span>
+                <span class="text-muted">{{ l.duree }} min</span>
+                {% if l.vehicule %}<span class="ms-2 badge bg-light text-dark"><i class="bi bi-car-front me-1"></i>{{ l.vehicule }}</span>{% endif %}
+                {% for b in l.bookings.all %}
+                    {% if b.statut == 'confirmee' %}
+                    <span class="ms-2"><i class="bi bi-person me-1"></i>{{ b.eleve.get_full_name }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="d-flex gap-1">
+                {% if l.statut == 'disponible' %}
+                <span class="badge bg-success">Libre</span>
+                {% elif l.statut == 'complete' %}
+                <a href="{% url 'moniteur_marquer_effectuee' l.id %}" class="btn btn-sm btn-success" title="Marquer effectuée"><i class="bi bi-check-lg"></i></a>
+                <a href="{% url 'moniteur_notes' l.id %}" class="btn btn-sm btn-outline-primary" title="Notes"><i class="bi bi-pencil"></i></a>
+                {% elif l.statut == 'effectuee' %}
+                <span class="badge bg-primary">Effectuée</span>
+                {% else %}
+                <span class="badge bg-danger">Annulée</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="planning-lesson text-muted text-center"><em>Aucune leçon</em></div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
