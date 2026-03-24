@@ -8,6 +8,80 @@
     <p class="text-muted">Bienvenue, {{ user.get_full_name|default:user.username }} 👋</p>
 </div>
 
+<!-- Parcours de formation -->
+<div class="card mb-4 shadow-sm border-0">
+    <div class="card-body p-4">
+        <h5 class="fw-bold mb-4"><i class="bi bi-map text-primary me-2"></i> Votre parcours</h5>
+        <div class="d-flex justify-content-between text-center position-relative">
+            <!-- Line behind steps -->
+            <div style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #e9ecef; z-index: 1;"></div>
+            
+            <!-- Step 1: Documents -->
+            <div style="z-index: 2; width: 25%;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.docs_validates %}bg-success text-white{% elif user.profile.passport_scan %}bg-warning text-dark{% else %}bg-primary text-white{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                    <i class="bi bi-file-text fs-5"></i>
+                </div>
+                <div class="fw-semibold">1. Documents</div>
+                {% if user.profile.docs_validates %}
+                    <small class="text-success"><i class="bi bi-check me-1"></i>Validés</small>
+                {% elif user.profile.passport_scan %}
+                    <small class="text-warning"><i class="bi bi-hourglass me-1"></i>En attente</small>
+                {% else %}
+                    <a href="{% url 'eleve_documents' %}" class="btn btn-sm btn-outline-primary mt-2 py-0 px-2" style="font-size: 0.8rem;">Fournir</a>
+                {% endif %}
+            </div>
+
+            <!-- Step 2: NEPH -->
+            <div style="z-index: 2; width: 25%;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.neph_status == 'valide' %}bg-success text-white{% elif user.profile.neph_status == 'attente' %}bg-warning text-dark{% elif user.profile.docs_validates %}bg-primary text-white{% else %}bg-light text-muted{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                    <i class="bi bi-upc-scan fs-5"></i>
+                </div>
+                <div class="fw-semibold">2. Numéro NEPH</div>
+                {% if user.profile.neph_status == 'valide' %}
+                    <small class="text-success"><i class="bi bi-check me-1"></i>{{ user.profile.numero_permis }}</small>
+                {% elif user.profile.neph_status == 'attente' %}
+                    <small class="text-warning"><i class="bi bi-hourglass me-1"></i>Demandé</small>
+                {% elif user.profile.docs_validates %}
+                    <form method="post" action="{% url 'eleve_demande_neph' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-primary mt-2 py-0 px-2" style="font-size: 0.8rem;">Demander</button>
+                    </form>
+                {% else %}
+                    <small class="text-muted">Bloqué</small>
+                {% endif %}
+            </div>
+
+            <!-- Step 3: Code -->
+            <div style="z-index: 2; width: 25%;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.code_obtenu %}bg-success text-white{% elif user.profile.neph_status == 'valide' %}bg-primary text-white{% else %}bg-light text-muted{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                    <i class="bi bi-joystick fs-5"></i>
+                </div>
+                <div class="fw-semibold">3. Code de la route</div>
+                {% if user.profile.code_obtenu %}
+                    <small class="text-success"><i class="bi bi-check me-1"></i>Obtenu</small>
+                {% elif user.profile.neph_status == 'valide' %}
+                    <a href="{% url 'eleve_cours' %}" class="btn btn-sm btn-outline-primary mt-2 py-0 px-2" style="font-size: 0.8rem;">Réviser</a>
+                {% else %}
+                    <small class="text-muted">Bloqué</small>
+                {% endif %}
+            </div>
+
+            <!-- Step 4: Conduite -->
+            <div style="z-index: 2; width: 25%;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.code_obtenu %}bg-primary text-white{% else %}bg-light text-muted{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                    <i class="bi bi-car-front fs-5"></i>
+                </div>
+                <div class="fw-semibold">4. Conduite</div>
+                {% if user.profile.code_obtenu %}
+                    <a href="{% url 'eleve_lecons' %}" class="btn btn-sm btn-outline-primary mt-2 py-0 px-2" style="font-size: 0.8rem;">S'inscrire</a>
+                {% else %}
+                    <small class="text-muted">Bloqué</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Stat cards -->
 <div class="row g-3 mb-4">
     <div class="col-md-6 col-xl-3">

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cours.titre }} — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h2><i class="bi bi-journal-text"></i> {{ cours.titre }}</h2>
+    <a href="{% url 'eleve_cours' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Retour
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-body p-5">
+        <div style="font-size: 1.1rem; line-height: 1.7;">
+            {{ cours.contenu|linebreaks }}
+        </div>
+        
+        {% if cours.fichier_pdf %}
+        <hr class="my-5">
+        <h4><i class="bi bi-file-earmark-pdf text-danger me-2"></i> Document associé</h4>
+        <a href="{{ cours.fichier_pdf.url }}" target="_blank" class="btn btn-outline-danger mt-2">
+            Télécharger / Voir le PDF
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

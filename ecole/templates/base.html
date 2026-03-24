@@ -53,6 +53,8 @@
                 <li><a href="{% url 'eleve_historique' %}" class="{% if request.resolver_match.url_name == 'eleve_historique' %}active{% endif %}"><i class="bi bi-clock-history"></i> Historique</a></li>
                 <li><a href="{% url 'eleve_paiements' %}" class="{% if request.resolver_match.url_name == 'eleve_paiements' %}active{% endif %}"><i class="bi bi-credit-card"></i> Paiements</a></li>
                 <li class="nav-section">PRÉPARATION</li>
+                <li><a href="{% url 'eleve_documents' %}" class="{% if 'documents' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-file-earmark-person"></i> Mes documents</a></li>
+                <li><a href="{% url 'eleve_cours' %}" class="{% if 'cours' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-book"></i> Cours de code</a></li>
                 <li><a href="{% url 'eleve_quiz' %}" class="{% if request.resolver_match.url_name == 'eleve_quiz' %}active{% endif %}"><i class="bi bi-question-circle"></i> Quiz Code</a></li>
                 <li class="nav-section">COMPTE</li>
                 <li><a href="{% url 'eleve_profil' %}" class="{% if request.resolver_match.url_name == 'eleve_profil' %}active{% endif %}"><i class="bi bi-person"></i> Mon profil</a></li>

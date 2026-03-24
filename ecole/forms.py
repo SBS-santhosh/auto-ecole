@@ -60,6 +60,13 @@ class ProfileForm(forms.ModelForm):
         return profile
 
 
+class DocumentUploadForm(forms.ModelForm):
+    """Formulaire d'upload des documents d'identité (Passeport, Visa)."""
+    class Meta:
+        model = Profile
+        fields = ['passport_scan', 'visa_proof']
+
+
 # ─── Admin forms ──────────────────────────────────────────────────
 
 class UserCreateForm(UserCreationForm):
@@ -70,6 +77,9 @@ class UserCreateForm(UserCreationForm):
     telephone = forms.CharField(max_length=20, required=False, label="Téléphone")
     role = forms.ChoiceField(choices=Profile.ROLE_CHOICES, label="Rôle")
     numero_permis = forms.CharField(max_length=50, required=False, label="N° de permis (moniteur)")
+    docs_validates = forms.BooleanField(required=False, label="Documents validés")
+    neph_status = forms.ChoiceField(choices=Profile.NEPH_CHOICES, required=False, label="Statut NEPH")
+    code_obtenu = forms.BooleanField(required=False, label="Code obtenu")
 
     class Meta:
         model = User
@@ -86,7 +96,10 @@ class UserCreateForm(UserCreationForm):
                 user=user,
                 role=self.cleaned_data['role'],
                 telephone=self.cleaned_data.get('telephone', ''),
-                numero_permis=self.cleaned_data.get('numero_permis', '')
+                numero_permis=self.cleaned_data.get('numero_permis', ''),
+                docs_validates=self.cleaned_data.get('docs_validates', False),
+                neph_status=self.cleaned_data.get('neph_status', 'na'),
+                code_obtenu=self.cleaned_data.get('code_obtenu', False)
             )
         return user
 
@@ -98,6 +111,9 @@ class UserEditForm(forms.ModelForm):
     email = forms.EmailField(required=True, label="Email")
     telephone = forms.CharField(max_length=20, required=False, label="Téléphone")
     numero_permis = forms.CharField(max_length=50, required=False, label="N° de permis")
+    docs_validates = forms.BooleanField(required=False, label="Documents validés")
+    neph_status = forms.ChoiceField(choices=Profile.NEPH_CHOICES, required=False, label="Statut NEPH")
+    code_obtenu = forms.BooleanField(required=False, label="Code obtenu")
 
     class Meta:
         model = User
@@ -109,6 +125,9 @@ class UserEditForm(forms.ModelForm):
             profile = self.instance.profile
             self.fields['telephone'].initial = profile.telephone
             self.fields['numero_permis'].initial = profile.numero_permis
+            self.fields['docs_validates'].initial = profile.docs_validates
+            self.fields['neph_status'].initial = profile.neph_status
+            self.fields['code_obtenu'].initial = profile.code_obtenu
         except Profile.DoesNotExist:
             pass
 
@@ -118,6 +137,9 @@ class UserEditForm(forms.ModelForm):
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.telephone = self.cleaned_data.get('telephone', '')
             profile.numero_permis = self.cleaned_data.get('numero_permis', '')
+            profile.docs_validates = self.cleaned_data.get('docs_validates', False)
+            profile.neph_status = self.cleaned_data.get('neph_status', 'na')
+            profile.code_obtenu = self.cleaned_data.get('code_obtenu', False)
             profile.save()
         return user
 

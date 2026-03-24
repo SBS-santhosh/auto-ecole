@@ -12,10 +12,11 @@ from django.db.models import Sum, Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 
-from .models import Profile, Vehicle, Lesson, Booking, Payment, QuizQuestion
+from .models import Profile, Vehicle, Lesson, Booking, Payment, QuizQuestion, CodeCourse
 from .forms import (
     InscriptionForm, ProfileForm, UserCreateForm, UserEditForm,
     LessonForm, VehicleForm, PaymentForm, LessonNotesForm,
+    DocumentUploadForm
 )
 from .decorators import eleve_required, moniteur_required, admin_required
 
@@ -132,6 +133,10 @@ def eleve_dashboard(request):
 @eleve_required
 def eleve_lecons(request):
     """Liste des leçons disponibles pour réservation."""
+    if not request.user.profile.code_obtenu:
+        messages.error(request, "Vous devez obtenir votre code de la route avant de réserver des leçons de conduite.")
+        return redirect('eleve_dashboard')
+
     lecons = Lesson.objects.filter(
         statut='disponible',
         date_heure__gte=timezone.now()
@@ -249,6 +254,14 @@ def eleve_quiz(request):
                     'correct': correct,
                     'explication': q.explication,
                 })
+        profile = request.user.profile
+        if score >= 8 and profile.neph_status == 'valide' and not profile.code_obtenu:
+            profile.code_obtenu = True
+            profile.save()
+            messages.success(request, "Félicitations ! Vous avez obtenu votre Code de la route. Vous pouvez maintenant réserver des leçons de conduite.")
+        elif score >= 8 and profile.neph_status != 'valide':
+            messages.info(request, "Bon score ! Mais votre statut NEPH doit être 'Validé' pour obtenir le code officiellement.")
+
         return render(request, 'eleve/quiz_result.html', {
             'score': score,
             'total': total,
@@ -257,6 +270,52 @@ def eleve_quiz(request):
         })
 
     return render(request, 'eleve/quiz.html', {'questions': questions})
+
+
+@login_required
+@eleve_required
+def eleve_documents(request):
+    """Upload des justificatifs (Passeport, Visa)."""
+    profile = request.user.profile
+    if request.method == 'POST':
+        form = DocumentUploadForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Vos documents ont été téléchargés et sont en cours de vérification.")
+            return redirect('eleve_dashboard')
+    else:
+        form = DocumentUploadForm(instance=profile)
+    return render(request, 'eleve/documents.html', {'form': form})
+
+
+@login_required
+@eleve_required
+def eleve_demande_neph(request):
+    """Demande du numéro NEPH."""
+    profile = request.user.profile
+    if profile.docs_validates and profile.neph_status == 'na':
+        profile.neph_status = 'attente'
+        profile.save()
+        messages.success(request, "Votre demande de numéro NEPH a été envoyée.")
+    else:
+        messages.error(request, "Vous ne pouvez pas faire cette demande pour le moment.")
+    return redirect('eleve_dashboard')
+
+
+@login_required
+@eleve_required
+def eleve_cours(request):
+    """Liste des cours de code."""
+    cours = CodeCourse.objects.all().order_by('ordre')
+    return render(request, 'eleve/cours.html', {'cours': cours})
+
+
+@login_required
+@eleve_required
+def eleve_cours_detail(request, cours_id):
+    """Détail d'un cours de code."""
+    cours = get_object_or_404(CodeCourse, id=cours_id)
+    return render(request, 'eleve/cours_detail.html', {'cours': cours})
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -520,6 +579,34 @@ def admin_eleve_supprimer(request, user_id):
     return render(request, 'admin_panel/confirm_delete.html', {
         'objet': user.get_full_name(), 'back_url': 'admin_eleves'
     })
+
+
+@login_required
+@admin_required
+def admin_valider_documents(request, user_id):
+    """Valider les documents d'un élève."""
+    user = get_object_or_404(User, id=user_id, profile__role='eleve')
+    if request.method == 'POST':
+        user.profile.docs_validates = True
+        user.profile.save()
+        messages.success(request, f"Documents de {user.get_full_name()} validés avec succès.")
+    return redirect('admin_eleves')
+
+
+@login_required
+@admin_required
+def admin_valider_neph(request, user_id):
+    """Assigner le numéro NEPH (numéro de permis) à un élève."""
+    user = get_object_or_404(User, id=user_id, profile__role='eleve')
+    if request.method == 'POST':
+        neph_numero = request.POST.get('neph_numero')
+        if neph_numero:
+            user.profile.numero_permis = neph_numero
+            user.profile.neph_status = 'valide'
+            user.profile.save()
+            messages.success(request, f"Numéro NEPH assigné à {user.get_full_name()}.")
+            return redirect('admin_eleves')
+    return render(request, 'admin_panel/neph_form.html', {'eleve': user})
 
 
 # ─── CRUD Moniteurs ──────────────────────────────────────────────

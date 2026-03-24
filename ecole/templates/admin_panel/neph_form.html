@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Assigner NEPH — Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-card-heading"></i> Assigner un numéro NEPH</h2>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <p class="lead">Affectez le numéro NEPH pour l'élève <strong>{{ eleve.get_full_name }}</strong>.</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3 mt-4">
+                <label for="neph_numero" class="form-label fw-bold">Numéro NEPH à attribuer</label>
+                <input type="text" class="form-control" id="neph_numero" name="neph_numero" required placeholder="Ex: 010203040506">
+            </div>
+            
+            <a href="{% url 'admin_eleves' %}" class="btn btn-secondary text-dark"><i class="bi bi-x-circle me-1"></i> Annuler</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i> Valider et Assigner</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

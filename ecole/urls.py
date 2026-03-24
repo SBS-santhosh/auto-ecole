@@ -19,6 +19,10 @@ urlpatterns = [
     path('paiements/', views.eleve_paiements, name='eleve_paiements'),
     path('profil/', views.eleve_profil, name='eleve_profil'),
     path('quiz/', views.eleve_quiz, name='eleve_quiz'),
+    path('documents/', views.eleve_documents, name='eleve_documents'),
+    path('demande-neph/', views.eleve_demande_neph, name='eleve_demande_neph'),
+    path('cours/', views.eleve_cours, name='eleve_cours'),
+    path('cours/<int:cours_id>/', views.eleve_cours_detail, name='eleve_cours_detail'),
 
     # ─── Espace Moniteur ──────────────────────────────────────────
     path('moniteur/dashboard/', views.moniteur_dashboard, name='moniteur_dashboard'),
@@ -36,6 +40,8 @@ urlpatterns = [
     path('gestion/eleves/creer/', views.admin_eleve_creer, name='admin_eleve_creer'),
     path('gestion/eleves/<int:user_id>/modifier/', views.admin_eleve_modifier, name='admin_eleve_modifier'),
     path('gestion/eleves/<int:user_id>/supprimer/', views.admin_eleve_supprimer, name='admin_eleve_supprimer'),
+    path('gestion/eleves/<int:user_id>/valider_documents/', views.admin_valider_documents, name='admin_valider_documents'),
+    path('gestion/eleves/<int:user_id>/valider_neph/', views.admin_valider_neph, name='admin_valider_neph'),
 
     path('gestion/moniteurs/', views.admin_moniteurs, name='admin_moniteurs'),
     path('gestion/moniteurs/creer/', views.admin_moniteur_creer, name='admin_moniteur_creer'),

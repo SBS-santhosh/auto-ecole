@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Mes Documents — AutoÉcole Pro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-file-earmark-person"></i> Mes Documents</h2>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">Pièces justificatives requises</h5>
+            </div>
+            <div class="card-body">
+                {% if user.profile.docs_validates %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i> Vos documents ont été validés par l'administration.
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-4">Afin de procéder à votre inscription officielle et faire la demande de numéro NEPH, veuillez fournir les documents ci-dessous.</p>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-upload me-2"></i>Soumettre
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

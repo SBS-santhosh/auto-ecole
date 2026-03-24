@@ -17,6 +17,18 @@ class Profile(models.Model):
     numero_permis = models.CharField(max_length=50, blank=True, null=True, verbose_name="Numéro de permis")
     date_inscription = models.DateTimeField(default=timezone.now)
     photo = models.ImageField(upload_to='photos/', blank=True, null=True)
+    
+    # Nouveaux champs pour la vérification et le NEPH
+    passport_scan = models.FileField(upload_to='documents/', blank=True, null=True, verbose_name="Passeport")
+    visa_proof = models.FileField(upload_to='documents/', blank=True, null=True, verbose_name="Preuve de Visa")
+    docs_validates = models.BooleanField(default=False, verbose_name="Documents validés")
+    NEPH_CHOICES = [
+        ('na', 'Non demandé'),
+        ('attente', 'En attente'),
+        ('valide', 'Validé'),
+    ]
+    neph_status = models.CharField(max_length=20, choices=NEPH_CHOICES, default='na', verbose_name="Statut NEPH")
+    code_obtenu = models.BooleanField(default=False, verbose_name="Code obtenu")
 
     class Meta:
         verbose_name = "Profil"
@@ -41,6 +53,22 @@ class Vehicle(models.Model):
 
     def __str__(self):
         return f"{self.marque} {self.modele} ({self.immatriculation})"
+
+
+class CodeCourse(models.Model):
+    """Cours de Code de la route."""
+    titre = models.CharField(max_length=200)
+    contenu = models.TextField()
+    fichier_pdf = models.FileField(upload_to='cours_pdfs/', blank=True, null=True, verbose_name="Fichier PDF optionnel")
+    ordre = models.IntegerField(default=0, help_text="Ordre d'affichage du cours")
+
+    class Meta:
+        verbose_name = "Cours de Code"
+        verbose_name_plural = "Cours de Code"
+        ordering = ['ordre', 'titre']
+
+    def __str__(self):
+        return self.titre
 
 
 class Lesson(models.Model):

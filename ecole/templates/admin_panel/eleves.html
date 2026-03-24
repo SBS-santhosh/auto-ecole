@@ -14,7 +14,15 @@
         <div class="table-responsive">
             <table class="table mb-0">
                 <thead>
-                    <tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Inscrit le</th><th>Actions</th></tr>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Inscrit le</th>
+                        <th>Documents</th>
+                        <th>NEPH</th>
+                        <th>Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for e in eleves %}
@@ -23,6 +31,28 @@
                         <td>{{ e.email }}</td>
                         <td>{{ e.profile.telephone|default:"—" }}</td>
                         <td>{{ e.profile.date_inscription|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if e.profile.docs_validates %}
+                                <span class="badge bg-success">Validés</span>
+                            {% elif e.profile.passport_scan and e.profile.visa_proof %}
+                                <form method="post" action="{% url 'admin_valider_documents' e.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-primary">Valider</button>
+                                </form>
+                                <br><small><a href="{{ e.profile.passport_scan.url }}" target="_blank">Passeport</a> | <a href="{{ e.profile.visa_proof.url }}" target="_blank">Visa</a></small>
+                            {% else %}
+                                <span class="badge bg-secondary">Manquants</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if e.profile.neph_status == 'valide' %}
+                                <span class="badge bg-success">{{ e.profile.numero_permis }}</span>
+                            {% elif e.profile.neph_status == 'attente' %}
+                                <a href="{% url 'admin_valider_neph' e.id %}" class="btn btn-sm btn-warning">Assigner</a>
+                            {% else %}
+                                <span class="badge bg-secondary">Non demandé</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <a href="{% url 'admin_eleve_modifier' e.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
                             <a href="{% url 'admin_eleve_supprimer' e.id %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
