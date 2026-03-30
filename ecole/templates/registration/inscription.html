@@ -1,23 +1,42 @@
 {% extends 'base.html' %}
+{# Pages liées à l'authentification (connexion, inscription, gestion des mots de passe). #}
+{# ═══════════════════════════════════════════════════════════════════
+   TEMPLATE : Page d'inscription
+   RÔLE     : Formulaire de création de compte pour les nouveaux élèves.
+              Le formulaire InscriptionForm gère la validation du mot de passe
+              avec les règles Django (longueur min, pas entièrement numérique, etc.)
+   VUE      : inscription() dans views.py
+   FORM     : InscriptionForm (forms.py) — hérite de UserCreationForm
+   ACCÈS    : Public — redirige vers dashboard si déjà connecté
+   BLOC     : public_content (layout sans sidebar)
+   ═══════════════════════════════════════════════════════════════════ #}
 {% load crispy_forms_tags %}
 
 {% block title %}Inscription — AutoÉcole Pro{% endblock %}
 
 {% block public_content %}
+{# Conteneur centré pour la carte d'authentification #}
 <div class="auth-container">
     <div class="auth-card">
+        {# En-tête avec icône et titre #}
         <div class="text-center mb-4">
             <i class="bi bi-car-front-fill" style="font-size: 2.5rem; color: var(--primary);"></i>
             <h2 class="mt-2">Créer un compte</h2>
             <p class="auth-subtitle">Rejoignez AutoÉcole Pro et commencez votre formation</p>
         </div>
+
+        {# Formulaire POST vers la vue inscription() — csrf_token obligatoire (protection CSRF Django) #}
         <form method="post">
             {% csrf_token %}
+            {# Rendu automatique du formulaire avec le style Bootstrap via django-crispy-forms #}
+            {# Les champs incluent : username, prénom, nom, email, téléphone, password1, password2 #}
             {{ form|crispy }}
             <button type="submit" class="btn btn-primary w-100 py-2 mt-3">
                 <i class="bi bi-person-plus me-2"></i>S'inscrire
             </button>
         </form>
+
+        {# Lien de retour vers la connexion pour les utilisateurs déjà inscrits #}
         <p class="text-center mt-3 text-muted">
             Déjà inscrit ? <a href="{% url 'connexion' %}">Se connecter</a>
         </p>

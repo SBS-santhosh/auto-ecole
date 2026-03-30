@@ -1,24 +1,44 @@
 {% extends 'base.html' %}
+{# Dashboard et interface pour les étudiants (élèves). Permet la gestion des leçons, profil, et paiements. #}
+{# ═══════════════════════════════════════════════════════════════════
+   TEMPLATE : Tableau de bord élève
+   RÔLE     : Page d'accueil de l'espace élève après connexion.
+              Affiche le parcours de formation (4 étapes), les statistiques
+              personnelles et les prochaines leçons réservées.
+   VUE      : eleve_dashboard() dans views.py
+   DONNÉES  : bookings, heures_effectuees, objectif_heures,
+              prochaines_lecons, total_paye
+   ACCÈS    : Réservé aux utilisateurs avec role='eleve'
+              (contrôlé par le décorateur @eleve_required dans views.py)
+   BLOC     : content (layout avec sidebar, défini dans base.html)
+   ═══════════════════════════════════════════════════════════════════ #}
 
 {% block title %}Mon tableau de bord — AutoÉcole Pro{% endblock %}
 
 {% block content %}
+{# En-tête personnalisé avec le prénom de l'élève connecté #}
 <div class="page-header">
     <h2><i class="bi bi-speedometer2"></i> Tableau de bord</h2>
     <p class="text-muted">Bienvenue, {{ user.get_full_name|default:user.username }} 👋</p>
 </div>
 
-<!-- Parcours de formation -->
+{# ── Parcours de formation : 4 étapes à compléter (Documents → NEPH → Code → Conduite) ── #}
+{# Chaque étape est débloquée séquentiellement selon le profil de l'élève #}
 <div class="card mb-4 shadow-sm border-0">
     <div class="card-body p-4">
         <h5 class="fw-bold mb-4"><i class="bi bi-map text-primary me-2"></i> Votre parcours</h5>
         <div class="d-flex justify-content-between text-center position-relative">
-            <!-- Line behind steps -->
+            {# Ligne horizontale reliant visuellement les étapes #}
             <div style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #e9ecef; z-index: 1;"></div>
-            
-            <!-- Step 1: Documents -->
+
+            {# ── Étape 1 : Dépôt des documents (Passeport, Visa) ── #}
+            {# Couleur : vert si validés, jaune si en attente, bleu si non fournis #}
             <div style="z-index: 2; width: 25%;">
-                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.docs_validates %}bg-success text-white{% elif user.profile.passport_scan %}bg-warning text-dark{% else %}bg-primary text-white{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2
+                    {% if user.profile.docs_validates %}bg-success text-white
+                    {% elif user.profile.passport_scan %}bg-warning text-dark
+                    {% else %}bg-primary text-white{% endif %}"
+                    style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
                     <i class="bi bi-file-text fs-5"></i>
                 </div>
                 <div class="fw-semibold">1. Documents</div>
@@ -31,9 +51,15 @@
                 {% endif %}
             </div>
 
-            <!-- Step 2: NEPH -->
+            {# ── Étape 2 : Obtention du numéro NEPH ── #}
+            {# Débloquée uniquement si les documents sont validés (docs_validates=True) #}
             <div style="z-index: 2; width: 25%;">
-                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.neph_status == 'valide' %}bg-success text-white{% elif user.profile.neph_status == 'attente' %}bg-warning text-dark{% elif user.profile.docs_validates %}bg-primary text-white{% else %}bg-light text-muted{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2
+                    {% if user.profile.neph_status == 'valide' %}bg-success text-white
+                    {% elif user.profile.neph_status == 'attente' %}bg-warning text-dark
+                    {% elif user.profile.docs_validates %}bg-primary text-white
+                    {% else %}bg-light text-muted{% endif %}"
+                    style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
                     <i class="bi bi-upc-scan fs-5"></i>
                 </div>
                 <div class="fw-semibold">2. Numéro NEPH</div>
@@ -42,6 +68,7 @@
                 {% elif user.profile.neph_status == 'attente' %}
                     <small class="text-warning"><i class="bi bi-hourglass me-1"></i>Demandé</small>
                 {% elif user.profile.docs_validates %}
+                    {# Formulaire POST pour déclencher la demande NEPH #}
                     <form method="post" action="{% url 'eleve_demande_neph' %}" class="d-inline">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-outline-primary mt-2 py-0 px-2" style="font-size: 0.8rem;">Demander</button>
@@ -51,9 +78,14 @@
                 {% endif %}
             </div>
 
-            <!-- Step 3: Code -->
+            {# ── Étape 3 : Passage du code de la route ── #}
+            {# Débloquée si neph_status='valide'. L'élève peut s'entraîner avec le quiz. #}
             <div style="z-index: 2; width: 25%;">
-                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.code_obtenu %}bg-success text-white{% elif user.profile.neph_status == 'valide' %}bg-primary text-white{% else %}bg-light text-muted{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2
+                    {% if user.profile.code_obtenu %}bg-success text-white
+                    {% elif user.profile.neph_status == 'valide' %}bg-primary text-white
+                    {% else %}bg-light text-muted{% endif %}"
+                    style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
                     <i class="bi bi-joystick fs-5"></i>
                 </div>
                 <div class="fw-semibold">3. Code de la route</div>
@@ -66,9 +98,13 @@
                 {% endif %}
             </div>
 
-            <!-- Step 4: Conduite -->
+            {# ── Étape 4 : Leçons de conduite ── #}
+            {# Débloquée uniquement si code_obtenu=True (vérifiée dans eleve_lecons()) #}
             <div style="z-index: 2; width: 25%;">
-                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 {% if user.profile.code_obtenu %}bg-primary text-white{% else %}bg-light text-muted{% endif %}" style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2
+                    {% if user.profile.code_obtenu %}bg-primary text-white
+                    {% else %}bg-light text-muted{% endif %}"
+                    style="width: 45px; height: 45px; border: 3px solid white; box-shadow: 0 0 0 2px #fff;">
                     <i class="bi bi-car-front fs-5"></i>
                 </div>
                 <div class="fw-semibold">4. Conduite</div>
@@ -82,8 +118,9 @@
     </div>
 </div>
 
-<!-- Stat cards -->
+{# ── Cartes statistiques personnelles de l'élève ── #}
 <div class="row g-3 mb-4">
+    {# Heures de conduite effectuées avec barre de progression vers l'objectif #}
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card bg-gradient-primary p-3">
             <div class="d-flex justify-content-between align-items-start">
@@ -93,6 +130,7 @@
                 </div>
                 <div class="stat-icon"><i class="bi bi-clock"></i></div>
             </div>
+            {# Barre de progression : % = heures_effectuees / objectif_heures * 100 #}
             <div class="progress mt-3" style="height: 6px; background: rgba(255,255,255,0.2);">
                 {% widthratio heures_effectuees objectif_heures 100 as pct %}
                 <div class="progress-bar" style="width: {{ pct }}%; background: white;"></div>
@@ -100,6 +138,7 @@
             <small class="mt-1 d-block" style="color: rgba(255,255,255,0.7);">{{ heures_effectuees }}/{{ objectif_heures }}h objectif</small>
         </div>
     </div>
+    {# Nombre de réservations actives (statut='confirmee') #}
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card bg-gradient-success p-3">
             <div class="d-flex justify-content-between align-items-start">
@@ -111,6 +150,7 @@
             </div>
         </div>
     </div>
+    {# Total des paiements effectués (statut='paye') en euros #}
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card bg-gradient-info p-3">
             <div class="d-flex justify-content-between align-items-start">
@@ -122,6 +162,7 @@
             </div>
         </div>
     </div>
+    {# Pourcentage global de progression vers l'objectif #}
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card bg-gradient-warning p-3">
             <div class="d-flex justify-content-between align-items-start">
@@ -136,7 +177,8 @@
     </div>
 </div>
 
-<!-- Prochaines leçons -->
+{# ── Tableau des prochaines leçons réservées (5 maximum) ── #}
+{# Affiche uniquement les leçons futures avec statut Booking='confirmee' #}
 <div class="card">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event me-2 text-primary"></i>Prochaines leçons</h5>
@@ -156,6 +198,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {# Chaque ligne correspond à un objet Booking avec sa leçon liée #}
                     {% for b in prochaines_lecons %}
                     <tr>
                         <td>{{ b.lecon.date_heure|date:"d/m/Y" }}</td>
@@ -169,6 +212,7 @@
             </table>
         </div>
         {% else %}
+        {# État vide : invitation à réserver une première leçon #}
         <div class="empty-state py-4">
             <i class="bi bi-calendar-x"></i>
             <h5>Aucune leçon à venir</h5>

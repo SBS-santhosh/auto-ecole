@@ -1,0 +1,37 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# === Environnements virtuels ===
+venv/
+.venv/
+env/
+.env/
+
+# === Django ===
+db.sqlite3
+staticfiles/
+media/
+*.log
+
+# === Outils IA (Aider, Copilot, etc.) ===
+.aider*
+.copilot/
+
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === Éditeurs ===
+.vscode/
+.idea/
+*.swp
+*.swo

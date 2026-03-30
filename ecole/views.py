@@ -534,15 +534,23 @@ def admin_eleves(request):
 @login_required
 @admin_required
 def admin_eleve_creer(request):
-    """Créer un élève."""
+    """Créer un nouvel élève depuis l'espace admin.
+    
+    Le rôle 'eleve' est forcé APRES la sauvegarde du formulaire
+    pour garantir son application, car UserCreateForm.save() crée le profil.
+    """
     if request.method == 'POST':
         form = UserCreateForm(request.POST)
         if form.is_valid():
-            form.cleaned_data['role'] = 'eleve'
-            form.save()
+            # Sauvegarder l'utilisateur + profil (via UserCreateForm.save())
+            user = form.save()
+            # Forcer le rôle 'eleve' après création (sécurité)
+            user.profile.role = 'eleve'
+            user.profile.save()
             messages.success(request, "Élève créé avec succès.")
             return redirect('admin_eleves')
     else:
+        # Pré-remplir le rôle 'eleve' pour affichage dans le formulaire
         form = UserCreateForm(initial={'role': 'eleve'})
     return render(request, 'admin_panel/user_form.html', {
         'form': form, 'titre': 'Créer un élève', 'back_url': 'admin_eleves'
@@ -622,15 +630,23 @@ def admin_moniteurs(request):
 @login_required
 @admin_required
 def admin_moniteur_creer(request):
-    """Créer un moniteur."""
+    """Créer un nouveau moniteur depuis l'espace admin.
+    
+    Le rôle 'moniteur' est forcé APRES la sauvegarde du formulaire
+    pour garantir son application, car UserCreateForm.save() crée le profil.
+    """
     if request.method == 'POST':
         form = UserCreateForm(request.POST)
         if form.is_valid():
-            form.cleaned_data['role'] = 'moniteur'
-            form.save()
+            # Sauvegarder l'utilisateur + profil (via UserCreateForm.save())
+            user = form.save()
+            # Forcer le rôle 'moniteur' après création (sécurité)
+            user.profile.role = 'moniteur'
+            user.profile.save()
             messages.success(request, "Moniteur créé avec succès.")
             return redirect('admin_moniteurs')
     else:
+        # Pré-remplir le rôle 'moniteur' pour affichage dans le formulaire
         form = UserCreateForm(initial={'role': 'moniteur'})
     return render(request, 'admin_panel/user_form.html', {
         'form': form, 'titre': 'Créer un moniteur', 'back_url': 'admin_moniteurs'

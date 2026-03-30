@@ -60,29 +60,12 @@ WSGI_APPLICATION = 'autoecole_pro.wsgi.application'
 
 # ─── Database ─────────────────────────────────────────────────────
 # SQLite par défaut pour le développement.
-# Pour MySQL en production, décommentez la section MySQL ci-dessous
-# et commentez la section SQLite.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-# ─── MySQL (production) ──────────────────────────────────────────
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'autoecole_pro',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',
-#         'PORT': '3306',
-#         'OPTIONS': {
-#             'charset': 'utf8mb4',
-#         },
-#     }
-# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

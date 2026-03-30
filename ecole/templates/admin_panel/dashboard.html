@@ -1,45 +1,67 @@
 {% extends 'base.html' %}
+{# Interface d'administration. Permet le CRUD sur les utilisateurs, véhicules, leçons et paiements. #}
+{# ═══════════════════════════════════════════════════════════════════
+   TEMPLATE : Tableau de bord administrateur
+   RÔLE     : Vue d'ensemble de l'auto-école pour l'administrateur.
+              Affiche les statistiques globales, les dernières réservations
+              et les raccourcis vers les actions fréquentes.
+   VUE      : admin_dashboard() dans views.py
+   DONNÉES  : nb_eleves, nb_moniteurs, nb_lecons, nb_vehicules,
+              nb_reservations, total_revenus, paiements_en_attente,
+              lecons_recentes, reservations_recentes
+   ACCÈS    : Réservé aux utilisateurs avec role='admin'
+              (contrôlé par le décorateur @admin_required dans views.py)
+   BLOC     : content (layout avec sidebar, défini dans base.html)
+   ═══════════════════════════════════════════════════════════════════ #}
 
 {% block title %}Administration — AutoÉcole Pro{% endblock %}
 
 {% block content %}
+{# En-tête de la page admin #}
 <div class="page-header">
     <h2><i class="bi bi-speedometer2"></i> Tableau de bord administrateur</h2>
     <p class="text-muted">Vue d'ensemble de l'auto-école</p>
 </div>
 
-<!-- Stat cards -->
+{# ── Cartes statistiques générales (6 indicateurs clés) ── #}
+{# Ces chiffres sont calculés en temps réel depuis la base de données #}
 <div class="row g-3 mb-4">
+    {# Nombre total d'élèves (Profile avec role='eleve') #}
     <div class="col-md-6 col-xl-2">
         <div class="card stat-card bg-gradient-primary p-3">
             <div class="stat-value">{{ nb_eleves }}</div>
             <div class="stat-label mt-1">Élèves</div>
         </div>
     </div>
+    {# Nombre total de moniteurs (Profile avec role='moniteur') #}
     <div class="col-md-6 col-xl-2">
         <div class="card stat-card bg-gradient-info p-3">
             <div class="stat-value">{{ nb_moniteurs }}</div>
             <div class="stat-label mt-1">Moniteurs</div>
         </div>
     </div>
+    {# Nombre total de créneaux de leçon créés #}
     <div class="col-md-6 col-xl-2">
         <div class="card stat-card bg-gradient-success p-3">
             <div class="stat-value">{{ nb_lecons }}</div>
             <div class="stat-label mt-1">Leçons</div>
         </div>
     </div>
+    {# Nombre de véhicules actifs (actif=True) #}
     <div class="col-md-6 col-xl-2">
         <div class="card stat-card bg-gradient-warning p-3">
             <div class="stat-value">{{ nb_vehicules }}</div>
             <div class="stat-label mt-1">Véhicules</div>
         </div>
     </div>
+    {# Somme totale des paiements encaissés (statut='paye') #}
     <div class="col-md-6 col-xl-2">
         <div class="card stat-card bg-gradient-danger p-3">
             <div class="stat-value">{{ total_revenus }}€</div>
             <div class="stat-label mt-1">Revenus</div>
         </div>
     </div>
+    {# Nombre de réservations actives (statut='confirmee') #}
     <div class="col-md-6 col-xl-2">
         <div class="card stat-card bg-gradient-dark p-3">
             <div class="stat-value">{{ nb_reservations }}</div>
@@ -49,7 +71,9 @@
 </div>
 
 <div class="row g-3">
-    <!-- Dernières réservations -->
+    {# ── Tableau des 10 dernières réservations (association Booking N,N) ── #}
+    {# Illustre l'association 1,N→1,N : un élève peut réserver plusieurs leçons
+       et une leçon peut être réservée par plusieurs élèves via Booking #}
     <div class="col-lg-7">
         <div class="card">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -59,7 +83,7 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table mb-0">
-                        <thead><tr><th>Élève</th><th>Date leçon</th><th>Moniteur</th><th>Statut</th></tr></thead>
+                        <thead><tr><th>Élève</th><th>Date leçon</th><th>Moniteur</th><th>Statut</th><th class="text-end">Actions</th></tr></thead>
                         <tbody>
                             {% for r in reservations_recentes %}
                             <tr>
@@ -67,13 +91,18 @@
                                 <td>{{ r.lecon.date_heure|date:"d/m/Y H:i" }}</td>
                                 <td>{{ r.lecon.moniteur.get_full_name }}</td>
                                 <td>
+                                    {# Badge coloré selon le statut de la réservation #}
                                     {% if r.statut == 'confirmee' %}<span class="badge bg-success">Confirmée</span>
                                     {% elif r.statut == 'annulee' %}<span class="badge bg-danger">Annulée</span>
                                     {% else %}<span class="badge bg-warning text-dark">En attente</span>{% endif %}
                                 </td>
+                                <td class="text-end">
+                                    <a href="{% url 'admin_eleve_modifier' r.eleve.id %}" class="btn btn-sm btn-outline-secondary py-0 px-1" title="Modifier Utilisateur"><i class="bi bi-person-gear"></i></a>
+                                    <a href="{% url 'admin_lecon_modifier' r.lecon.id %}" class="btn btn-sm btn-outline-primary py-0 px-1" title="Modifier Session"><i class="bi bi-pencil"></i></a>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted py-3">Aucune réservation</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted py-3">Aucune réservation</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -82,8 +111,9 @@
         </div>
     </div>
 
-    <!-- Résumé financier -->
+    {# ── Panneau de droite : finances + actions rapides ── #}
     <div class="col-lg-5">
+        {# Résumé financier : revenus encaissés vs. paiements en attente #}
         <div class="card mb-3">
             <div class="card-header bg-white">
                 <h5 class="mb-0 fw-bold"><i class="bi bi-wallet2 me-2 text-success"></i>Finances</h5>
@@ -102,15 +132,36 @@
             </div>
         </div>
 
+        {# Raccourcis CRUD les plus fréquents pour l'administrateur #}
         <div class="card">
             <div class="card-header bg-white">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-lightning me-2 text-warning"></i>Actions rapides</h5>
+                <h5 class="mb-0 fw-bold"><i class="bi bi-lightning me-2 text-warning"></i>Actions & Gestion CRUD</h5>
             </div>
-            <div class="card-body d-grid gap-2">
-                <a href="{% url 'admin_eleve_creer' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-plus me-2"></i>Ajouter un élève</a>
-                <a href="{% url 'admin_moniteur_creer' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-badge me-2"></i>Ajouter un moniteur</a>
-                <a href="{% url 'admin_lecon_creer' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-calendar-plus me-2"></i>Créer une leçon</a>
-                <a href="{% url 'admin_export_eleves_csv' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-download me-2"></i>Exporter élèves CSV</a>
+            <div class="card-body">
+                <h6 class="text-muted mb-2 text-uppercase small">Élèves & Utilisateurs</h6>
+                <div class="d-grid gap-2 mb-3">
+                    <div class="btn-group">
+                        <a href="{% url 'admin_eleves' %}" class="btn btn-outline-primary btn-sm w-50" title="Gérer (Modifier/Supprimer)"><i class="bi bi-people me-1"></i> Gérer Élèves</a>
+                        <a href="{% url 'admin_eleve_creer' %}" class="btn btn-primary btn-sm w-50"><i class="bi bi-person-plus me-1"></i> Créer Élève</a>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'admin_moniteurs' %}" class="btn btn-outline-info btn-sm w-50" title="Gérer (Modifier/Supprimer)"><i class="bi bi-person-badge me-1"></i> Gérer Monit.</a>
+                        <a href="{% url 'admin_moniteur_creer' %}" class="btn btn-info btn-sm text-white w-50"><i class="bi bi-plus-circle me-1"></i> Créer Monit.</a>
+                    </div>
+                </div>
+
+                <h6 class="text-muted mb-2 text-uppercase small">Sessions (Leçons)</h6>
+                <div class="d-grid gap-2 mb-3">
+                    <div class="btn-group">
+                        <a href="{% url 'admin_lecons' %}" class="btn btn-outline-success btn-sm w-50" title="Gérer (Modifier/Supprimer)"><i class="bi bi-calendar3 me-1"></i> Gérer Sessions</a>
+                        <a href="{% url 'admin_lecon_creer' %}" class="btn btn-success btn-sm w-50"><i class="bi bi-calendar-plus me-1"></i> Créer Session</a>
+                    </div>
+                </div>
+
+                <h6 class="text-muted mb-2 text-uppercase small">Outils</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin_export_eleves_csv' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-download me-2"></i>Exporter élèves CSV</a>
+                </div>
             </div>
         </div>
     </div>

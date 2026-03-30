@@ -1,35 +1,59 @@
 {% extends 'base.html' %}
+{# Pages liées à l'authentification (connexion, inscription, gestion des mots de passe). #}
+{# ═══════════════════════════════════════════════════════════════════
+   TEMPLATE : Page de connexion
+   RÔLE     : Formulaire d'authentification pour accéder à son espace
+              (élève, moniteur ou admin). Le mot de passe est vérifié
+              de façon sécurisée via django.contrib.auth.authenticate().
+   VUE      : connexion() dans views.py
+   MÉTHODE  : POST → authenticate(username, password) → login()
+   ACCÈS    : Public — redirige vers dashboard si déjà connecté
+   BLOC     : public_content (layout sans sidebar)
+   ═══════════════════════════════════════════════════════════════════ #}
 
 {% block title %}Connexion — AutoÉcole Pro{% endblock %}
 
 {% block public_content %}
+{# Conteneur centré pour la carte d'authentification #}
 <div class="auth-container">
     <div class="auth-card">
+        {# En-tête avec icône et titre #}
         <div class="text-center mb-4">
             <i class="bi bi-car-front-fill" style="font-size: 2.5rem; color: var(--primary);"></i>
             <h2 class="mt-2">Connexion</h2>
             <p class="auth-subtitle">Accédez à votre espace personnel</p>
         </div>
+
+        {# Formulaire POST — les champs sont envoyés de façon sécurisée (HTTPS en production) #}
         <form method="post">
             {% csrf_token %}
+
+            {# Champ nom d'utilisateur : correspond à User.username dans la base de données #}
             <div class="mb-3">
                 <label for="username" class="form-label fw-semibold">Nom d'utilisateur</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input type="text" name="username" id="username" class="form-control" placeholder="Votre identifiant" required autofocus>
+                    <input type="text" name="username" id="username" class="form-control"
+                           placeholder="Votre identifiant" required autofocus>
                 </div>
             </div>
+
+            {# Champ mot de passe : Django vérifie le hash en base (PBKDF2 par défaut) #}
             <div class="mb-3">
                 <label for="password" class="form-label fw-semibold">Mot de passe</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input type="password" name="password" id="password" class="form-control" placeholder="Votre mot de passe" required>
+                    <input type="password" name="password" id="password" class="form-control"
+                           placeholder="Votre mot de passe" required>
                 </div>
             </div>
+
             <button type="submit" class="btn btn-primary w-100 py-2 mt-2">
                 <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
             </button>
         </form>
+
+        {# Lien vers l'inscription pour les nouveaux utilisateurs #}
         <p class="text-center mt-3 text-muted">
             Pas encore de compte ? <a href="{% url 'inscription' %}">S'inscrire</a>
         </p>

@@ -1,14 +1,26 @@
 {% extends 'base.html' %}
+{# Dashboard et interface pour les moniteurs. Gestion des plannings, leçons, et fiches élèves. #}
+{# ═══════════════════════════════════════════════════════════════════
+   TEMPLATE : Tableau de bord du moniteur
+   RÔLE     : Page d'accueil de l'espace moniteur après connexion.
+              Affiche les statistiques clés et les prochaines leçons.
+   DONNÉES  : total_lecons, lecons_semaine, nb_eleves, lecons_a_venir
+   ACCÈS    : Réservé aux utilisateurs avec role='moniteur'
+              (contrôlé par le décorateur @moniteur_required dans views.py)
+   ═══════════════════════════════════════════════════════════════════ #}
 
 {% block title %}Tableau de bord moniteur — AutoÉcole Pro{% endblock %}
 
 {% block content %}
+{# En-tête de la page avec salutation personnalisée #}
 <div class="page-header">
     <h2><i class="bi bi-speedometer2"></i> Tableau de bord</h2>
     <p class="text-muted">Bienvenue, {{ user.get_full_name }} 👋</p>
 </div>
 
+{# ── Cartes statistiques : chiffres clés du moniteur ── #}
 <div class="row g-3 mb-4">
+    {# Nombre total de leçons créées par ce moniteur (toutes périodes confondues) #}
     <div class="col-md-4">
         <div class="card stat-card bg-gradient-primary p-3">
             <div class="d-flex justify-content-between align-items-start">
@@ -20,6 +32,7 @@
             </div>
         </div>
     </div>
+    {# Nombre de leçons dans la semaine en cours (lundi → dimanche) #}
     <div class="col-md-4">
         <div class="card stat-card bg-gradient-success p-3">
             <div class="d-flex justify-content-between align-items-start">
@@ -31,6 +44,7 @@
             </div>
         </div>
     </div>
+    {# Nombre d'élèves uniques ayant au moins une réservation confirmée chez ce moniteur #}
     <div class="col-md-4">
         <div class="card stat-card bg-gradient-info p-3">
             <div class="d-flex justify-content-between align-items-start">
@@ -45,6 +59,7 @@
 </div>
 
 <div class="row g-3">
+    {# ── Tableau des prochaines leçons à venir (5 maximum) ── #}
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -53,6 +68,7 @@
             </div>
             <div class="card-body p-0">
                 {% if lecons_a_venir %}
+                {# Tableau des créneaux : chaque ligne représente une leçon future #}
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead><tr><th>Date</th><th>Heure</th><th>Statut</th><th>Actions</th></tr></thead>
@@ -62,14 +78,16 @@
                                 <td class="fw-semibold">{{ l.date_heure|date:"d/m/Y" }}</td>
                                 <td><span class="badge bg-primary-subtle text-primary">{{ l.date_heure|date:"H:i" }}</span></td>
                                 <td>
+                                    {# Badge de statut coloré selon l'état de la leçon #}
                                     {% if l.statut == 'disponible' %}<span class="badge bg-success">Disponible</span>
                                     {% elif l.statut == 'complete' %}<span class="badge bg-info">Réservée</span>
                                     {% else %}<span class="badge bg-secondary">{{ l.get_statut_display }}</span>{% endif %}
                                 </td>
                                 <td>
+                                    {# Les boutons d'action apparaissent uniquement si la leçon est réservée (statut='complete') #}
                                     {% if l.statut == 'complete' %}
-                                    <a href="{% url 'moniteur_marquer_effectuee' l.id %}" class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i></a>
-                                    <a href="{% url 'moniteur_notes' l.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                    <a href="{% url 'moniteur_marquer_effectuee' l.id %}" class="btn btn-sm btn-success" title="Marquer effectuée"><i class="bi bi-check-lg"></i></a>
+                                    <a href="{% url 'moniteur_notes' l.id %}" class="btn btn-sm btn-outline-primary" title="Ajouter des notes"><i class="bi bi-pencil"></i></a>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -78,14 +96,17 @@
                     </table>
                 </div>
                 {% else %}
+                {# État vide : aucune leçon programmée dans le futur #}
                 <div class="empty-state py-4">
                     <i class="bi bi-calendar-x"></i>
                     <h5>Aucune leçon à venir</h5>
+                    <p>Créez un créneau pour accueillir vos élèves.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
+    {# ── Raccourcis vers les actions fréquentes ── #}
     <div class="col-lg-4">
         <div class="card">
             <div class="card-header bg-white">
