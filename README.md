@@ -104,4 +104,3 @@ python manage.py runserver
 ```
 
 Accès local : [http://localhost:8000/](http://localhost:8000/)
-# auto-ecole
