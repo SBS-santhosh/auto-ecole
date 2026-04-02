@@ -17,7 +17,7 @@ Lancer les tests :
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from .models import Profile, Vehicle, Lesson, Booking, Payment
+from .models import Profile, Vehicle, Lesson, Booking, Payment, QuizQuestion, CodeCourse
 from django.utils import timezone
 from datetime import timedelta
 
@@ -420,3 +420,214 @@ class CRUDVehiculeTest(TestCase):
         url = reverse('admin_vehicule_supprimer', args=[v.id])
         self.client.post(url)
         self.assertFalse(Vehicle.objects.filter(id=v.id).exists())
+
+
+# ══════════════════════════════════════════════════════════════════
+#  TESTS PAIEMENTS
+# ══════════════════════════════════════════════════════════════════
+
+class PaymentTest(TestCase):
+    """Vérifie le modèle et les vues de paiement."""
+
+    def setUp(self):
+        self.client = Client()
+        self.eleve_user = User.objects.create_user(username='eleve_pay', password='pass')
+        Profile.objects.create(user=self.eleve_user, role='eleve')
+        self.client.login(username='eleve_pay', password='pass')
+
+    def test_creation_paiement(self):
+        """Un paiement peut être créé et lié à un élève."""
+        p = Payment.objects.create(
+            eleve=self.eleve_user,
+            montant=150.00,
+            methode='carte',
+            statut='paye'
+        )
+        self.assertEqual(p.eleve, self.eleve_user)
+        self.assertEqual(float(p.montant), 150.00)
+
+    def test_vue_paiements_eleve(self):
+        """L'élève voit ses paiements sur sa page dédiée."""
+        Payment.objects.create(eleve=self.eleve_user, montant=50.0, statut='paye')
+        Payment.objects.create(eleve=self.eleve_user, montant=100.0, statut='en_attente')
+        
+        response = self.client.get(reverse('eleve_paiements'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "50")
+        self.assertContains(response, "100")
+
+
+# ══════════════════════════════════════════════════════════════════
+#  TESTS CODE ET QUIZ
+# ══════════════════════════════════════════════════════════════════
+
+class CodeAndQuizTest(TestCase):
+    """Vérifie les cours de code et la logique du quiz."""
+
+    def setUp(self):
+        self.client = Client()
+        self.eleve_user = User.objects.create_user(username='eleve_quiz', password='pass')
+        self.profile = Profile.objects.create(
+            user=self.eleve_user, 
+            role='eleve', 
+            neph_status='valide'
+        )
+        self.client.login(username='eleve_quiz', password='pass')
+        
+        # Créer 10 questions pour le quiz
+        for i in range(10):
+            QuizQuestion.objects.create(
+                question=f"Question {i}",
+                option_a="Rep A", option_b="Rep B", option_c="Rep C",
+                reponse_correcte='A'
+            )
+
+    def test_cours_code_liste(self):
+        """Vérifie l'affichage de la liste des cours."""
+        CodeCourse.objects.create(titre="Sécurité", contenu="Blabla", ordre=1)
+        response = self.client.get(reverse('eleve_cours'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Sécurité")
+
+    def test_quiz_obtention_code(self):
+        """Vérifie qu'un élève obtient son code s'il a 8/10 et un NEPH valide."""
+        # On simule un POST avec 8 bonnes réponses
+        data = {}
+        questions = QuizQuestion.objects.all()
+        for i, q in enumerate(questions):
+            # 8 correctes (A), 2 fausses (B)
+            data[f'question_{q.id}'] = 'A' if i < 8 else 'B'
+            
+        response = self.client.post(reverse('eleve_quiz'), data)
+        self.assertEqual(response.status_code, 200)
+        
+        # Recharger le profil depui la DB
+        self.profile.refresh_from_db()
+        self.assertTrue(self.profile.code_obtenu)
+
+
+# ══════════════════════════════════════════════════════════════════
+#  TESTS DOCUMENTS ET FLUX NEPH
+# ══════════════════════════════════════════════════════════════════
+
+class DocumentAndNephTest(TestCase):
+    """Vérifie le cycle de validation des documents et NEPH."""
+
+    def setUp(self):
+        self.client = Client()
+        self.eleve = User.objects.create_user(username='eleve_docs', password='pass')
+        self.profile = Profile.objects.create(user=self.eleve, role='eleve')
+        
+        self.admin = User.objects.create_user(username='admin_docs', password='pass')
+        Profile.objects.create(user=self.admin, role='admin')
+
+    def test_flux_validation_neph(self):
+        """Vérifie le passage de na -> attente -> valide."""
+        self.client.login(username='eleve_docs', password='pass')
+        
+        # 1. Tentative de demande NEPH sans documents validés -> Erreur
+        response = self.client.get(reverse('eleve_demande_neph'))
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.neph_status, 'na')
+
+        # 2. Admin valide les docs
+        self.client.login(username='admin_docs', password='pass')
+        self.client.post(reverse('admin_valider_documents', args=[self.eleve.id]))
+        self.profile.refresh_from_db()
+        self.assertTrue(self.profile.docs_validates)
+
+        # 3. Élève fait sa demande NEPH
+        self.client.login(username='eleve_docs', password='pass')
+        self.client.get(reverse('eleve_demande_neph'))
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.neph_status, 'attente')
+
+        # 4. Admin assigne le numéro NEPH
+        self.client.login(username='admin_docs', password='pass')
+        self.client.post(reverse('admin_valider_neph', args=[self.eleve.id]), {'neph_numero': '123456789'})
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.neph_status, 'valide')
+        self.assertEqual(self.profile.numero_permis, '123456789')
+
+
+# ══════════════════════════════════════════════════════════════════
+#  TESTS WORKFLOW MONITEUR
+# ══════════════════════════════════════════════════════════════════
+
+class MoniteurWorkflowTest(TestCase):
+    """Vérifie les actions spécifiques au moniteur."""
+
+    def setUp(self):
+        self.client = Client()
+        self.moniteur = User.objects.create_user(username='moni', password='pass')
+        Profile.objects.create(user=self.moniteur, role='moniteur')
+        
+        self.eleve = User.objects.create_user(username='elev', password='pass')
+        Profile.objects.create(user=self.eleve, role='eleve')
+
+        self.vehicule = Vehicle.objects.create(immatriculation='MONI-1', marque='A', modele='B', annee=2000)
+        self.lecon = Lesson.objects.create(
+            moniteur=self.moniteur, vehicule=self.vehicule, 
+            date_heure=timezone.now(), statut='disponible'
+        )
+        self.client.login(username='moni', password='pass')
+
+    def test_marquer_lecon_effectuee(self):
+        """Le moniteur peut marquer sa leçon comme finie."""
+        url = reverse('moniteur_marquer_effectuee', args=[self.lecon.id])
+        self.client.get(url)
+        self.lecon.refresh_from_db()
+        self.assertEqual(self.lecon.statut, 'effectuee')
+
+    def test_ajouter_notes_lecon(self):
+        """Le moniteur peut ajouter des commentaires d'évaluation."""
+        url = reverse('moniteur_notes', args=[self.lecon.id])
+        self.client.post(url, {'notes': 'Très bon élève'})
+        self.lecon.refresh_from_db()
+        self.assertEqual(self.lecon.notes, 'Très bon élève')
+
+
+# ══════════════════════════════════════════════════════════════════
+#  TESTS GESTION ADMIN (CREATION PROFILS)
+# ══════════════════════════════════════════════════════════════════
+
+class AdminManagementTest(TestCase):
+    """Vérifie la création d'utilisateurs par l'admin."""
+
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_user(username='boss', password='pass')
+        Profile.objects.create(user=self.admin, role='admin')
+        self.client.login(username='boss', password='pass')
+
+    def test_admin_creer_eleve_lie_profil(self):
+        """Vérifie que la création d'un élève par l'admin lie bien un profil 'eleve'."""
+        url = reverse('admin_eleve_creer')
+        data = {
+            'username': 'nouvel_eleve_admin',
+            'first_name': 'Jean',
+            'last_name': 'Admin',
+            'email': 'adm@test.fr',
+            'password1': 'AdminPass123!',
+            'password2': 'AdminPass123!',
+            'role': 'eleve'
+        }
+        self.client.post(url, data)
+        user = User.objects.get(username='nouvel_eleve_admin')
+        self.assertEqual(user.profile.role, 'eleve')
+
+    def test_admin_creer_moniteur_lie_profil(self):
+        """Vérifie que la création d'un moniteur par l'admin lie bien un profil 'moniteur'."""
+        url = reverse('admin_moniteur_creer')
+        data = {
+            'username': 'nouveau_moni_admin',
+            'first_name': 'Luc',
+            'last_name': 'Admin',
+            'email': 'moniadmin@test.fr',
+            'password1': 'AdminPass123!',
+            'password2': 'AdminPass123!',
+            'role': 'moniteur'
+        }
+        self.client.post(url, data)
+        user = User.objects.get(username='nouveau_moni_admin')
+        self.assertEqual(user.profile.role, 'moniteur')
